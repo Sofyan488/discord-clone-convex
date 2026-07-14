@@ -19,11 +19,14 @@ export function AuthScreen() {
     form.set("flow", mode);
     try {
       await signIn("password", form);
-    } catch {
+    } catch (err) {
+      // Surface the real error to the console for debugging; show a concise
+      // message to the user.
+      console.error("Auth failed:", err);
       setError(
         mode === "signIn"
           ? "Invalid email or password."
-          : "Could not create account. Try a different email.",
+          : "Could not create account. The email may already be in use, or the password is too weak.",
       );
     } finally {
       setSubmitting(false);

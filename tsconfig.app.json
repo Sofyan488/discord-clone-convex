@@ -25,5 +25,5 @@
       "@convex/*": ["convex/*"]
     }
   },
-  "include": ["src", "tests/unit", "tests/e2e"]
+  "include": ["src", "tests/setup.ts", "tests/unit", "tests/e2e"]
 }
