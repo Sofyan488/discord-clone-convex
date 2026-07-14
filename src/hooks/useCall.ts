@@ -105,12 +105,14 @@ export function useCall(target: CallTarget) {
         sendSignal: (to, kind, payload) => {
           const cid = callIdRef.current;
           if (cid) {
+            // Fire-and-forget; a peer that just left can make this reject —
+            // swallow it so signaling races never bubble as unhandled errors.
             void sendSignal({
               callId: cid,
               toUserId: to as Id<"users">,
               kind,
               payload,
-            });
+            }).catch(() => {});
           }
         },
         onRemoteStream: (uid, s) =>
@@ -155,7 +157,11 @@ export function useCall(target: CallTarget) {
           // ignore malformed/expired signals
         }
       }
-      await ackSignals({ signalIds: ids });
+      try {
+        await ackSignals({ signalIds: ids });
+      } catch {
+        // ack can race with the room ending; safe to ignore.
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signals]);

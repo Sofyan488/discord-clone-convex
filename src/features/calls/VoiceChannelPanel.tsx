@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Button } from "@/components/Button";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { CallView } from "./CallView";
 
 // Voice-channel main area: a lobby showing who's connected + a Join button,
@@ -20,11 +21,17 @@ export function VoiceChannelPanel({
   if (joined) {
     return (
       <main className="min-w-0 flex-1">
-        <CallView
-          target={{ channelId }}
-          title={name}
+        <ErrorBoundary
+          title="This call ran into a problem."
           onLeave={() => setJoined(false)}
-        />
+          leaveLabel="Leave call"
+        >
+          <CallView
+            target={{ channelId }}
+            title={name}
+            onLeave={() => setJoined(false)}
+          />
+        </ErrorBoundary>
       </main>
     );
   }

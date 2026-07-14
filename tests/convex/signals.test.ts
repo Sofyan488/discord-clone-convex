@@ -25,6 +25,66 @@ async function callWithTwo(t: ReturnType<typeof setup>) {
   return { owner, member, callId };
 }
 
+// Server + voice channel + a joined member, but nobody has joined the CALL yet.
+async function voiceRoomReady(t: ReturnType<typeof setup>) {
+  const owner = await createUser(t, "Ahmad");
+  const { serverId } = await asUser(t, owner).mutation(api.servers.create, {
+    name: "S",
+  });
+  const server = await t.run((ctx) => ctx.db.get(serverId));
+  const member = await createUser(t, "Sofyan");
+  await asUser(t, member).mutation(api.servers.joinByInvite, {
+    inviteCode: server!.inviteCode,
+  });
+  const { channelId } = await asUser(t, owner).mutation(api.channels.create, {
+    serverId,
+    name: "Voice",
+    type: "voice",
+  });
+  return { owner, member, channelId };
+}
+
+describe("signals.receive join/leave races", () => {
+  // Reproduces the crash: Ahmad joins first (creating the room); Sofyan's
+  // getState surfaces that callId and subscribes signals.receive BEFORE his own
+  // join() lands his participant row. This must return [] rather than throw
+  // FORBIDDEN (which crashed Sofyan's route).
+  test("receive returns [] before the caller's own join lands", async () => {
+    const t = setup();
+    const { owner, member, channelId } = await voiceRoomReady(t);
+
+    const { callId } = await asUser(t, owner).mutation(api.calls.join, {
+      channelId,
+    });
+
+    // Sofyan is a channel member but has NOT joined the call yet.
+    const inbox = await asUser(t, member).query(api.signals.receive, {
+      callId,
+    });
+    expect(inbox).toEqual([]);
+
+    // Once his join lands, the same subscription keeps working.
+    await asUser(t, member).mutation(api.calls.join, { channelId });
+    expect(
+      await asUser(t, member).query(api.signals.receive, { callId }),
+    ).toEqual([]);
+  });
+
+  // Reproduces the leave race: the room is deleted (last peer left) while a
+  // client's receive subscription is still live. Must return [] not NOT_FOUND.
+  test("receive returns [] after the room has ended", async () => {
+    const t = setup();
+    const { owner, channelId } = await voiceRoomReady(t);
+    const { callId } = await asUser(t, owner).mutation(api.calls.join, {
+      channelId,
+    });
+    await asUser(t, owner).mutation(api.calls.leave, { callId });
+
+    const inbox = await asUser(t, owner).query(api.signals.receive, { callId });
+    expect(inbox).toEqual([]);
+  });
+});
+
 describe("signals relay", () => {
   test("participant sends; recipient receives then acks", async () => {
     const t = setup();

@@ -18,5 +18,11 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/unit/**/*.test.{ts,tsx}", "tests/convex/**/*.test.ts"],
+    // convex-test spins up an in-memory backend per test; under load (e.g. a
+    // concurrent build or a live `convex dev`) a multi-user call test can brush
+    // the 5s default. Raise the ceiling so environmental contention doesn't
+    // read as a failure, while still catching genuine hangs.
+    testTimeout: 15_000,
+    hookTimeout: 15_000,
   },
 });

@@ -9,6 +9,7 @@ import { DmMessageList } from "./DmMessageList";
 import { MessageComposer } from "@/features/messages/MessageComposer";
 import { TypingIndicator } from "@/features/messages/TypingIndicator";
 import { CallView } from "@/features/calls/CallView";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // A single DM conversation (FR-027). Reuses the shared composer/typing/scroller.
 export function DmConversation() {
@@ -58,11 +59,17 @@ export function DmConversation() {
 
       {inCall ? (
         <div className="min-h-0 flex-1">
-          <CallView
-            target={{ threadId: id }}
-            title={`Call with ${thread.otherUser.name}`}
+          <ErrorBoundary
+            title="This call ran into a problem."
             onLeave={() => setInCall(false)}
-          />
+            leaveLabel="Leave call"
+          >
+            <CallView
+              target={{ threadId: id }}
+              title={`Call with ${thread.otherUser.name}`}
+              onLeave={() => setInCall(false)}
+            />
+          </ErrorBoundary>
         </div>
       ) : (
         <>
