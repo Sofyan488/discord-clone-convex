@@ -31,13 +31,13 @@ Single-repo web app: Vite SPA in `src/`, Convex backend in `convex/`, tests in `
 
 **Purpose**: Project initialization and tooling
 
-- [ ] T001 Initialize Vite + React 18 + TypeScript project at repo root (`package.json`, `index.html`, `src/main.tsx`, `vite.config.ts`, `tsconfig.json` with `"strict": true`)
-- [ ] T002 [P] Install and configure Tailwind CSS (`tailwind.config.ts`, `postcss.config.js`, `src/styles/index.css`)
-- [ ] T003 [P] Add runtime deps: `react-router-dom`, `convex`, `@convex-dev/auth` (`package.json`)
-- [ ] T004 [P] Configure ESLint + Prettier with strict TypeScript rules (`.eslintrc.cjs`, `.prettierrc`)
-- [ ] T005 [P] Configure test tooling: Vitest + React Testing Library, `convex-test`, Playwright (`vitest.config.ts`, `playwright.config.ts`, create `tests/convex/`, `tests/unit/`, `tests/e2e/`)
-- [ ] T006 Initialize Convex project and generate types (`npx convex dev`), creating `convex/` and `convex/_generated/`; add `VITE_CONVEX_URL` to `.env.local`
-- [ ] T007 [P] Ensure `.env.local` is gitignored and add `npm` scripts (`dev`, `test`, `test:e2e`, `typecheck`, `lint`) in `package.json`
+- [X] T001 Initialize Vite + React 18 + TypeScript project at repo root (`package.json`, `index.html`, `src/main.tsx`, `vite.config.ts`, `tsconfig.json` with `"strict": true`)
+- [X] T002 [P] Install and configure Tailwind CSS (`tailwind.config.ts`, `postcss.config.js`, `src/styles/index.css`)
+- [X] T003 [P] Add runtime deps: `react-router-dom`, `convex`, `@convex-dev/auth` (`package.json`)
+- [X] T004 [P] Configure ESLint + Prettier with strict TypeScript rules (`.eslintrc.cjs`, `.prettierrc`)
+- [X] T005 [P] Configure test tooling: Vitest + React Testing Library, `convex-test`, Playwright (`vitest.config.ts`, `playwright.config.ts`, create `tests/convex/`, `tests/unit/`, `tests/e2e/`)
+- [X] T006 Initialize Convex project and generate types (`npx convex dev`), creating `convex/` and `convex/_generated/`; add `VITE_CONVEX_URL` to `.env.local`
+- [X] T007 [P] Ensure `.env.local` is gitignored and add `npm` scripts (`dev`, `test`, `test:e2e`, `typecheck`, `lint`) in `package.json`
 
 **Checkpoint**: App builds and an empty Convex deployment is reachable.
 
@@ -49,14 +49,14 @@ Single-repo web app: Vite SPA in `src/`, Convex backend in `convex/`, tests in `
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T008 Define all 12 tables with indexes in `convex/schema.ts` (users, servers, serverMembers, channels, messages, directMessageThreads, directMessages, typingIndicators, presence, calls, callParticipants, signals) per data-model.md
-- [ ] T009 Configure Convex Auth password provider with profile mapping (`name`, `avatarUrl`) in `convex/auth.ts`, `convex/auth.config.ts`, `convex/http.ts`
-- [ ] T010 [P] Implement authorization helpers (default-deny) in `convex/lib/auth.ts`: `requireUser`, `requireMember`, `requireOwner`, `requireAuthor`, and typed `ConvexError` codes (`UNAUTHENTICATED`, `FORBIDDEN`, `NOT_MEMBER`, `NOT_AUTHOR`, `NOT_OWNER`, `NO_SHARED_SERVER`, `CALL_FULL`, `VALIDATION`)
-- [ ] T011 [P] Implement chunked cascade-delete helpers in `convex/lib/cascade.ts`: `deleteTextChannelCascade`, `deleteVoiceChannelCascade`, `deleteServerCascade` per research R11
-- [ ] T012 Set up Convex client + providers in `src/lib/convex.ts` and `src/main.tsx` (`ConvexProvider` + `ConvexAuthProvider`)
-- [ ] T013 [P] Implement app shell + routing in `src/App.tsx` and `src/router.tsx` with `<Authenticated>`/`<Unauthenticated>` gating and the Discord layout regions (server rail, channel sidebar, main area, member list)
-- [ ] T014 [P] Build base Tailwind UI primitives in `src/components/` (`Button.tsx`, `Input.tsx`, `Modal.tsx`, `Avatar.tsx`, `Spinner.tsx`, `ContextMenu.tsx`)
-- [ ] T015 [P] Implement visibility-aware interval hook in `src/hooks/useHeartbeat.ts` (drives presence + in-call heartbeats)
+- [X] T008 Define all 12 tables with indexes in `convex/schema.ts` (users, servers, serverMembers, channels, messages, directMessageThreads, directMessages, typingIndicators, presence, calls, callParticipants, signals) per data-model.md
+- [X] T009 Configure Convex Auth password provider with profile mapping (`name`, `avatarUrl`) in `convex/auth.ts`, `convex/auth.config.ts`, `convex/http.ts`
+- [X] T010 [P] Implement authorization helpers (default-deny) in `convex/lib/auth.ts`: `requireUser`, `requireMember`, `requireOwner`, `requireAuthor`, and typed `ConvexError` codes (`UNAUTHENTICATED`, `FORBIDDEN`, `NOT_MEMBER`, `NOT_AUTHOR`, `NOT_OWNER`, `NO_SHARED_SERVER`, `CALL_FULL`, `VALIDATION`)
+- [X] T011 [P] Implement chunked cascade-delete helpers in `convex/lib/cascade.ts`: `deleteTextChannelCascade`, `deleteVoiceChannelCascade`, `deleteServerCascade` per research R11
+- [X] T012 Set up Convex client + providers in `src/lib/convex.ts` and `src/main.tsx` (`ConvexProvider` + `ConvexAuthProvider`)
+- [X] T013 [P] Implement app shell + routing in `src/App.tsx` and `src/router.tsx` with `<Authenticated>`/`<Unauthenticated>` gating and the Discord layout regions (server rail, channel sidebar, main area, member list)
+- [X] T014 [P] Build base Tailwind UI primitives in `src/components/` (`Button.tsx`, `Input.tsx`, `Modal.tsx`, `Avatar.tsx`, `Spinner.tsx`, `ContextMenu.tsx`)
+- [X] T015 [P] Implement visibility-aware interval hook in `src/hooks/useHeartbeat.ts` (drives presence + in-call heartbeats)
 
 **Checkpoint**: Schema deployed, auth wired, layout renders behind auth gate.
 
