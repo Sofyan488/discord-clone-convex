@@ -4,18 +4,15 @@ import type { Channel } from "@/features/channels/ChannelSidebar";
 import { MessageList } from "./MessageList";
 import { MessageComposer } from "./MessageComposer";
 import { TypingIndicator } from "./TypingIndicator";
+import { VoiceChannelPanel } from "@/features/calls/VoiceChannelPanel";
 
-// Main area for a selected channel. Text channels show live messaging; voice
-// channels are placeholders until calls arrive in User Story 5.
+// Main area for a selected channel: live messaging for text channels, the
+// voice call surface for voice channels.
 export function ChannelView({ channel }: { channel: Channel }) {
   const send = useMutation(api.messages.send);
 
   if (channel.type === "voice") {
-    return (
-      <main className="grid min-w-0 flex-1 place-items-center bg-discord-bg text-discord-muted">
-        <p>🔊 {channel.name} — voice calls arrive in User Story 5.</p>
-      </main>
-    );
+    return <VoiceChannelPanel channelId={channel._id} name={channel.name} />;
   }
 
   return (

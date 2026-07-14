@@ -191,20 +191,20 @@ indicators, leave.
 
 ### Tests for User Story 5 (write first, must fail) ⚠️
 
-- [ ] T059 [P] [US5] `convex-test` for `calls.join` (create/find room, participant insert, `CALL_FULL` at 4, ghost exclusion) and `leave` (deactivate when empty) in `tests/convex/calls.test.ts`
-- [ ] T060 [P] [US5] `convex-test` for `calls.setMedia`, `calls.heartbeat` (lastSeen refresh), and `getState` stale filtering in `tests/convex/calls.test.ts`
-- [ ] T061 [P] [US5] `convex-test` for `signals` send/receive/ack participant gating + recipient scoping in `tests/convex/signals.test.ts`
-- [ ] T062 [P] [US5] Unit test for the WebRTC mesh manager offer/answer/ICE state machine (mocked `RTCPeerConnection`) in `tests/unit/webrtc.test.ts`
+- [X] T059 [P] [US5] `convex-test` for `calls.join` (create/find room, participant insert, `CALL_FULL` at 4, ghost exclusion) and `leave` (deactivate when empty) in `tests/convex/calls.test.ts`
+- [X] T060 [P] [US5] `convex-test` for `calls.setMedia`, `calls.heartbeat` (lastSeen refresh), and `getState` stale filtering in `tests/convex/calls.test.ts`
+- [X] T061 [P] [US5] `convex-test` for `signals` send/receive/ack participant gating + recipient scoping in `tests/convex/signals.test.ts`
+- [X] T062 [P] [US5] Unit test for the WebRTC mesh manager offer/answer/ICE state machine (mocked `RTCPeerConnection`) in `tests/unit/webrtc.test.ts`
 
 ### Implementation for User Story 5
 
-- [ ] T063 [US5] Implement `convex/calls.ts`: `join`, `leave`, `setMedia`, `heartbeat`, `getState` (stale-participant filtering)
-- [ ] T064 [US5] Implement `convex/signals.ts`: `send`, `receive`, `ack` (participant-gated, recipient-scoped)
-- [ ] T065 [US5] Implement WebRTC mesh manager in `src/lib/webrtc/MeshManager.ts` (STUN config, deterministic offerer by userId, tracks published up front, `track.enabled` toggling, in-order signal application, `ontrack`, ICE-failure detection)
-- [ ] T066 [US5] Implement `src/hooks/useCall.ts` (join/leave, bridge `signals.receive`↔MeshManager, `signals.send`, WebAudio speaking detection → `setMedia`, in-call heartbeat)
-- [ ] T067 [P] [US5] Build call view: video tiles, mic/camera toggle controls, mute/speaking indicators, leave button, STUN-failure state in `src/features/calls/CallView.tsx` and `VideoTile.tsx`
-- [ ] T068 [US5] Add voice-channel join UX in `src/features/channels/ChannelSidebar.tsx` and 1:1 "Start video call" from `src/features/dms/DmConversation.tsx`
-- [ ] T069 [US5] E2E: two-client voice channel call connects, toggle mic/camera, indicators update, leave in `tests/e2e/calls.spec.ts`
+- [X] T063 [US5] Implement `convex/calls.ts`: `join`, `leave`, `setMedia`, `heartbeat`, `getState` (stale-participant filtering)
+- [X] T064 [US5] Implement `convex/signals.ts`: `send`, `receive`, `ack` (participant-gated, recipient-scoped)
+- [X] T065 [US5] Implement WebRTC mesh manager in `src/lib/webrtc/MeshManager.ts` (STUN config, deterministic offerer by userId, tracks published up front, `track.enabled` toggling, in-order signal application, `ontrack`, ICE-failure detection)
+- [X] T066 [US5] Implement `src/hooks/useCall.ts` (join/leave, bridge `signals.receive`↔MeshManager, `signals.send`, WebAudio speaking detection → `setMedia`, in-call heartbeat)
+- [X] T067 [P] [US5] Build call view: video tiles, mic/camera toggle controls, mute/speaking indicators, leave button, STUN-failure state in `src/features/calls/CallView.tsx` and `VideoTile.tsx`
+- [X] T068 [US5] Add voice-channel join UX in `src/features/calls/VoiceChannelPanel.tsx` (via `ChannelView`) and 1:1 "Start video call" from `src/features/dms/DmConversation.tsx`
+- [ ] T069 [US5] E2E: two-client voice channel call connects, toggle mic/camera, indicators update, leave in `tests/e2e/calls.spec.ts` — **authored (skipped); pending live-stack run with fake-media flags**
 
 **Checkpoint**: All five user stories independently functional.
 

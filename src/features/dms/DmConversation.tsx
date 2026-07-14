@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
@@ -7,6 +8,7 @@ import { Spinner } from "@/components/Spinner";
 import { DmMessageList } from "./DmMessageList";
 import { MessageComposer } from "@/features/messages/MessageComposer";
 import { TypingIndicator } from "@/features/messages/TypingIndicator";
+import { CallView } from "@/features/calls/CallView";
 
 // A single DM conversation (FR-027). Reuses the shared composer/typing/scroller.
 export function DmConversation() {
@@ -14,6 +16,7 @@ export function DmConversation() {
   const id = threadId as Id<"directMessageThreads">;
   const threads = useQuery(api.directMessages.listThreads);
   const send = useMutation(api.directMessages.send);
+  const [inCall, setInCall] = useState(false);
 
   if (threads === undefined) {
     return (
@@ -40,17 +43,40 @@ export function DmConversation() {
           src={thread.otherUser.avatarUrl}
           online={thread.otherUser.online}
         />
-        {thread.otherUser.name}
+        <span className="flex-1">{thread.otherUser.name}</span>
+        {!inCall && (
+          <button
+            onClick={() => setInCall(true)}
+            className="text-lg"
+            title="Start video call"
+            aria-label="Start video call"
+          >
+            📹
+          </button>
+        )}
       </div>
-      <DmMessageList threadId={id} />
-      <TypingIndicator target={{ threadId: id }} />
-      <MessageComposer
-        placeholder={`Message @${thread.otherUser.name}`}
-        typingTarget={{ threadId: id }}
-        onSend={(content, clientKey) =>
-          send({ threadId: id, content, clientKey }).then(() => {})
-        }
-      />
+
+      {inCall ? (
+        <div className="min-h-0 flex-1">
+          <CallView
+            target={{ threadId: id }}
+            title={`Call with ${thread.otherUser.name}`}
+            onLeave={() => setInCall(false)}
+          />
+        </div>
+      ) : (
+        <>
+          <DmMessageList threadId={id} />
+          <TypingIndicator target={{ threadId: id }} />
+          <MessageComposer
+            placeholder={`Message @${thread.otherUser.name}`}
+            typingTarget={{ threadId: id }}
+            onSend={(content, clientKey) =>
+              send({ threadId: id, content, clientKey }).then(() => {})
+            }
+          />
+        </>
+      )}
     </main>
   );
 }
