@@ -57,6 +57,18 @@ export function requireAuthor(
   if (doc.authorId !== callerId) fail("NOT_AUTHOR");
 }
 
+/** Ensure the caller is one of the two participants of a DM thread. */
+export async function requireThreadParticipant(
+  ctx: QueryCtx,
+  threadId: Id<"directMessageThreads">,
+) {
+  const userId = await requireUser(ctx);
+  const thread = await ctx.db.get(threadId);
+  if (thread === null) fail("NOT_FOUND");
+  if (thread.userAId !== userId && thread.userBId !== userId) fail("FORBIDDEN");
+  return { userId, thread };
+}
+
 /** Do the two users currently share at least one server? */
 export async function shareAServer(
   ctx: QueryCtx,

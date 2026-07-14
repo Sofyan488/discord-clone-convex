@@ -165,16 +165,16 @@ persist even without a shared server.
 
 ### Tests for User Story 4 (write first, must fail) ⚠️
 
-- [ ] T052 [P] [US4] `convex-test` for `directMessages.startThread` shared-server rule (`NO_SHARED_SERVER`) + idempotent pair thread in `tests/convex/dm.test.ts`
-- [ ] T053 [P] [US4] `convex-test` for DM send/edit/delete authorship + participant gating, and thread persistence after leaving a shared server, in `tests/convex/dm.test.ts`
+- [X] T052 [P] [US4] `convex-test` for `directMessages.startThread` shared-server rule (`NO_SHARED_SERVER`) + idempotent pair thread in `tests/convex/dm.test.ts`
+- [X] T053 [P] [US4] `convex-test` for DM send/edit/delete authorship + participant gating, and thread persistence after leaving a shared server, in `tests/convex/dm.test.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T054 [US4] Implement `convex/directMessages.ts`: `startThread`, `listThreads`, `list` (paginated), `send` (with the same `clientKey` idempotency pattern as T045a; add `clientKey` to `directMessages` in `convex/schema.ts`), `edit`, `remove`
-- [ ] T055 [P] [US4] Extend `convex/typing.ts` to support `{ threadId }` typing (participant-gated)
-- [ ] T056 [P] [US4] Build DM list + conversation UI (reusing MessageList/Composer) in `src/features/dms/DmList.tsx` and `DmConversation.tsx`
-- [ ] T057 [US4] Add "Message" action from member list to start a DM in `src/features/servers/MemberList.tsx` and DM routes in `src/router.tsx`
-- [ ] T058 [US4] E2E: start DM, real-time exchange, edit/delete in `tests/e2e/dm.spec.ts`
+- [X] T054 [US4] Implement `convex/directMessages.ts`: `startThread`, `listThreads`, `list` (paginated), `send` (with the same `clientKey` idempotency pattern as T045a; add `clientKey` to `directMessages` in `convex/schema.ts`), `edit`, `remove`
+- [X] T055 [P] [US4] Extend `convex/typing.ts` to support `{ threadId }` typing (participant-gated)
+- [X] T056 [P] [US4] Build DM list + conversation UI (reusing shared MessageScroller/MessageComposer/TypingIndicator) in `src/features/dms/DmSidebar.tsx`, `DmLayout.tsx`, `DmConversation.tsx`, `DmMessageList.tsx`
+- [X] T057 [US4] Add "Message" action from member list to start a DM in `src/features/servers/MemberList.tsx` and DM routes in `src/router.tsx` (+ DM home button in `ServerRail`)
+- [ ] T058 [US4] E2E: start DM, real-time exchange, edit/delete in `tests/e2e/dm.spec.ts` — **authored (skipped); pending live-stack run**
 
 **Checkpoint**: Direct messaging works alongside channels.
 

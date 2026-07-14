@@ -1,18 +1,16 @@
 import { KeyboardEvent, useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@convex/_generated/api";
-import type { Id } from "@convex/_generated/dataModel";
-import { useTyping } from "@/hooks/useTyping";
+import { useTyping, TypingTarget } from "@/hooks/useTyping";
 
-export function MessageComposer({
-  channelId,
-  channelName,
-}: {
-  channelId: Id<"channels">;
-  channelName: string;
-}) {
-  const send = useMutation(api.messages.send);
-  const { onType, stop } = useTyping(channelId);
+type Props = {
+  placeholder: string;
+  typingTarget: TypingTarget;
+  // Sends the message; clientKey makes reconnect retries idempotent (SC-009).
+  onSend: (content: string, clientKey: string) => Promise<void>;
+};
+
+// Shared composer for channels and DMs.
+export function MessageComposer({ placeholder, typingTarget, onSend }: Props) {
+  const { onType, stop } = useTyping(typingTarget);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -23,8 +21,7 @@ export function MessageComposer({
     stop();
     setError(null);
     try {
-      // Stable per-attempt key so a reconnect retry does not duplicate (SC-009).
-      await send({ channelId, content, clientKey: crypto.randomUUID() });
+      await onSend(content, crypto.randomUUID());
     } catch (err) {
       console.error("Send failed:", err);
       setError("Message failed to send. Try again.");
@@ -55,8 +52,8 @@ export function MessageComposer({
         onKeyDown={onKeyDown}
         onBlur={stop}
         rows={1}
-        placeholder={`Message #${channelName}`}
-        aria-label={`Message #${channelName}`}
+        placeholder={placeholder}
+        aria-label={placeholder}
         className="max-h-40 w-full resize-none rounded-lg bg-[#383a40] px-4 py-3 text-sm text-discord-text outline-none"
       />
     </div>

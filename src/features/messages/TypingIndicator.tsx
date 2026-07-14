@@ -1,9 +1,9 @@
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
-import type { Id } from "@convex/_generated/dataModel";
+import type { TypingTarget } from "@/hooks/useTyping";
 
-export function TypingIndicator({ channelId }: { channelId: Id<"channels"> }) {
-  const typers = useQuery(api.typing.list, { channelId }) ?? [];
+export function TypingIndicator({ target }: { target: TypingTarget }) {
+  const typers = useQuery(api.typing.list, target) ?? [];
 
   const text =
     typers.length === 0

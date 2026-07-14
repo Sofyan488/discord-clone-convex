@@ -1,14 +1,18 @@
 import { useMutation, useQuery } from "convex/react";
+import { useNavigate } from "react-router-dom";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Avatar } from "@/components/Avatar";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
-// Right-side member list with presence (FR-010). The owner can remove members.
+// Right-side member list with presence (FR-010). The owner can remove members;
+// any member can start a DM with another member (FR-025).
 export function MemberList({ serverId }: { serverId: Id<"servers"> }) {
   const me = useCurrentUser();
   const members = useQuery(api.presence.listForServer, { serverId });
   const removeMember = useMutation(api.servers.removeMember);
+  const startThread = useMutation(api.directMessages.startThread);
+  const navigate = useNavigate();
 
   if (members === undefined) return null;
 
@@ -21,6 +25,11 @@ export function MemberList({ serverId }: { serverId: Id<"servers"> }) {
   async function onRemove(userId: Id<"users">, name: string) {
     if (!window.confirm(`Remove ${name} from the server?`)) return;
     await removeMember({ serverId, userId });
+  }
+
+  async function onMessage(userId: Id<"users">) {
+    const { threadId } = await startThread({ otherUserId: userId });
+    navigate(`/dms/${threadId}`);
   }
 
   const Group = ({
@@ -50,6 +59,16 @@ export function MemberList({ serverId }: { serverId: Id<"servers"> }) {
                   </span>
                 )}
               </span>
+              {m.userId !== me?._id && (
+                <button
+                  onClick={() => onMessage(m.userId)}
+                  className="hidden text-discord-muted hover:text-discord-text group-hover:block"
+                  title={`Message ${m.name}`}
+                  aria-label={`Message ${m.name}`}
+                >
+                  💬
+                </button>
+              )}
               {viewerIsOwner && m.role !== "owner" && (
                 <button
                   onClick={() => onRemove(m.userId, m.name)}

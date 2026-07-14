@@ -16,6 +16,20 @@ export function ServerRail() {
       aria-label="Servers"
       className="flex w-[72px] shrink-0 flex-col items-center gap-2 bg-discord-rail py-3"
     >
+      <NavLink
+        to="/dms"
+        title="Direct Messages"
+        className={({ isActive }) =>
+          `grid h-12 w-12 place-items-center rounded-[24px] text-xl transition-all hover:rounded-2xl ${
+            isActive
+              ? "rounded-2xl bg-discord-accent text-white"
+              : "bg-discord-sidebar text-discord-text hover:bg-discord-accent hover:text-white"
+          }`
+        }
+      >
+        💬
+      </NavLink>
+      <div className="my-1 h-0.5 w-8 rounded bg-white/10" />
       {servers.map((s) => (
         <NavLink
           key={s._id}

@@ -2,8 +2,12 @@ import { useState } from "react";
 import type { Id } from "@convex/_generated/dataModel";
 import { Avatar } from "@/components/Avatar";
 
+// A message id can be a channel message or a direct message — the presentational
+// row handles both.
+export type MessageId = Id<"messages"> | Id<"directMessages">;
+
 export type ChannelMessage = {
-  _id: Id<"messages">;
+  _id: MessageId;
   authorId: Id<"users">;
   authorName: string;
   authorAvatarUrl?: string;
@@ -15,8 +19,8 @@ export type ChannelMessage = {
 type Props = {
   message: ChannelMessage;
   isOwn: boolean;
-  onEdit: (id: Id<"messages">, content: string) => Promise<void>;
-  onDelete: (id: Id<"messages">) => Promise<void>;
+  onEdit: (id: MessageId, content: string) => Promise<void>;
+  onDelete: (id: MessageId) => Promise<void>;
 };
 
 function formatTime(ms: number) {
