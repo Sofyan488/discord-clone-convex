@@ -34,21 +34,25 @@ correctly for this feature's requirements.
 - **Alternatives considered**: Clerk / Auth0 (rejected: external dependency not requested);
   hand-rolled auth (rejected: security risk, reinventing hashing/session handling).
 
-## R3. Online/offline presence via heartbeat
+## R3. Online/offline presence via heartbeat (multi-session-safe)
 
-- **Decision**: A `presence` table stores `{ userId, lastSeen }`. The client calls a
-  `heartbeat` mutation on an interval (~15s) while the tab is active. A user is considered
-  **online** if `now - lastSeen < 30s`, otherwise **offline**. Presence for a server is a
-  query that joins `serverMembers` with `presence` and derives the boolean.
-- **Rationale**: Convex has no built-in socket-disconnect hook exposed to app code, so a
-  heartbeat + staleness window is the standard pattern. 30s window meets SC-003 (< 5s is the
-  *target* for active connect; disconnect detection is bounded by the window — see R2 note
-  below). Interval of 15s with a 30s window tolerates one missed beat.
-- **Refinement for SC-003**: On explicit logout / `beforeunload`, the client fires a
-  best-effort `goOffline` mutation to flip presence immediately, so intentional
-  disconnects reflect quickly; crash/network-loss falls back to the staleness window.
-- **Alternatives considered**: Convex scheduled function sweeping stale rows (kept as an
-  optional optimization, not required — staleness is computed at read time).
+- **Decision**: A `presence` table stores one row per user `{ userId, lastSeen }`. The client
+  calls a `heartbeat` mutation on an interval (~10s) while the tab is active. A user is
+  **online** if `now - lastSeen < 20s`, otherwise **offline**. Presence for a server is a
+  query joining `serverMembers` with `presence` to derive the boolean (FR-005, FR-010).
+- **Per-user, not per-tab**: because any active tab refreshes the single row, closing one of
+  several open tabs does not flip the user offline — the surviving tab keeps `lastSeen`
+  fresh. This directly satisfies the "same account in two sessions" edge case.
+- **No `goOffline`**: an earlier draft flipped presence to offline on `beforeunload`. That is
+  **wrong for multi-session** (closing one tab would mark a still-active user offline), so it
+  is removed. Offline is reached purely by the staleness window when the *last* tab stops
+  beating. Trade-off: involuntary-disconnect detection is bounded by the ~20s window rather
+  than the 5s SC-003 target; the connect direction is immediate (first heartbeat on load).
+  This is the simplest correct model; a per-session presence table (one row per tab, deleted
+  on close) is the documented upgrade path if sub-5s disconnect ever becomes a hard
+  requirement.
+- **Cleanup**: staleness is computed at read time; an optional scheduled sweep deletes rows
+  long past the window (also reused to reap stale call participants — see R9).
 
 ## R4. Typing indicators
 
@@ -81,8 +85,13 @@ correctly for this feature's requirements.
   3 downlinks — within desktop browser capability.
 - **Deterministic offerer**: To avoid glare, the peer with the lexicographically smaller
   `userId` creates the offer; the other answers. This makes signaling roles deterministic.
+- **No renegotiation on toggle**: both audio and video tracks are acquired and published at
+  join; mic/camera toggles flip `track.enabled` rather than adding/removing tracks. This
+  avoids `onnegotiationneeded` entirely, so the only offer/answer exchange is the initial one
+  — keeping signaling minimal and glare-free (Principle V).
 - **Alternatives considered**: SFU (LiveKit/Twilio/mediasoup) — rejected per requirements and
   because it adds a media server. Documented as the scaling path beyond 4 participants.
+  Lazy track-add + renegotiation — rejected as unnecessary complexity for a 4-party mesh.
 
 ## R7. WebRTC signaling over Convex
 
@@ -117,7 +126,14 @@ correctly for this feature's requirements.
 - **Rationale**: Keeps authoritative mute/speaking state in Convex so all participants (and
   non-joined observers of the channel) see indicators reactively within SC-007 (< 1s).
 - **Join cap enforcement**: Join mutation rejects a 5th participant (FR-030 / edge case),
-  returning a typed error the UI shows.
+  returning a typed error the UI shows. Ghost participants (below) are excluded before the
+  cap check so a crashed peer never permanently blocks a slot.
+- **Ghost reaping**: an abrupt disconnect leaves a `callParticipants` row with no `leave`
+  call. Each client refreshes `callParticipants.lastSeen` via `calls.heartbeat` (piggybacked
+  on the presence heartbeat, ~10s). `calls.getState` excludes participants stale beyond the
+  ~20s window, and the presence sweep also deletes them — keeping the participant list and
+  the 4-person cap accurate. Peers also drop a tile immediately on
+  `iceConnectionState = failed/disconnected` for fast UI feedback.
 - **Alternatives considered**: Deriving mute/speaking purely from WebRTC stats (rejected:
   not reactive to other clients, harder to show to non-participants).
 
@@ -130,17 +146,28 @@ correctly for this feature's requirements.
 - **Rationale**: Principle IV requires default-deny enforced server-side, not in the UI.
 - **Alternatives considered**: UI-only gating (rejected: insecure).
 
-## R11. Cascade deletes
+## R11. Cascade deletes, server-leave, and account deletion (FR-012a)
 
-- **Decision**: Deleting a text channel deletes its messages (FR-016); deleting a server
-  (including when its owner leaves/deletes account, FR-012a) deletes channels, messages,
-  memberships, typing rows, calls, participants, and signals for that server. Implemented as
-  explicit multi-step mutations (Convex has no cascading FK), batched/paginated for large
-  data to respect transaction limits.
-- **Rationale**: Meets the spec's deletion requirements; explicit cascades are the Convex
-  idiom. Large cascades chunk work across scheduled mutations to stay within limits.
-- **Alternatives considered**: Soft-delete flags (rejected for v1: adds query complexity;
-  spec calls for actual removal).
+- **Decision**: Deleting a text channel deletes its messages + typing rows (FR-016); deleting
+  a voice channel deletes its call/participants/signals; deleting a server deletes its
+  channels, messages, typing rows, memberships, calls, participants, and signals. Implemented
+  as explicit multi-step mutations (Convex has no cascading FK), chunked across scheduled
+  mutations for large data to respect transaction limits.
+- **Server-leave** (`servers.leave`): a non-owner leaving deletes only their own membership
+  (+ their typing/call-participant rows in that server); the **owner** leaving deletes the
+  whole server via the cascade above (FR-012a; no ownership transfer in v1).
+- **Account deletion** (`users.deleteAccount`): cascade-delete every server the user owns;
+  delete the user's memberships in other servers; delete the user's presence/typing/
+  call-participant/pending-signal rows; **retain** DM threads, direct messages, and authored
+  channel messages; set `users.deleted = true` (tombstone) and remove the auth identity.
+- **Why a tombstone instead of hard-deleting the user**: FR-026a requires DMs to persist, and
+  retained channel messages/DMs reference `authorId`/`userAId`/`userBId`. Keeping the `users`
+  row as a tombstone (login disabled, hidden from member lists, unreachable for new DMs since
+  no shared server remains) preserves those references so history renders correctly — simpler
+  and safer than rewriting every historical row or nulling foreign keys.
+- **Alternatives considered**: hard-deleting the `users` row (rejected: dangling references in
+  retained DMs/messages); full soft-delete of all content (rejected: contradicts FR-026a and
+  adds query-time filtering everywhere).
 
 ## R12. Testing strategy
 

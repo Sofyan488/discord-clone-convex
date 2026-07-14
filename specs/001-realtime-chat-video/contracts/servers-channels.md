@@ -30,6 +30,14 @@ Covers FR-006–FR-016, FR-012a.
 - **Behavior**: deletes the target `serverMembers` row; the removed user loses access
   (FR-012). Owner cannot be removed this way. **Auth**: owner only.
 
+### `servers.leave` (mutation)
+- **Args**: `{ serverId: Id<"servers"> }`
+- **Returns**: `v.null()`
+- **Behavior**: the caller leaves the server. If the caller is a **member**, only their
+  `serverMembers` (+ their typing/call-participant rows in that server) are removed. If the
+  caller is the **owner**, the entire server is cascade-deleted (FR-012a; ownership is not
+  transferred in v1). **Auth**: caller MUST be a member of `serverId`.
+
 ### `servers.listMine` (query)
 - **Args**: `{}`
 - **Returns**: `v.array({ _id, name, ownerId })`
@@ -42,11 +50,12 @@ Covers FR-006–FR-016, FR-012a.
 
 ## Invites
 
-### `servers.createInvite` (mutation)
+### `servers.getInvite` (query)
 - **Args**: `{ serverId: Id<"servers"> }`
 - **Returns**: `{ inviteCode: v.string() }`
-- **Behavior**: returns (or regenerates) the reusable invite code for the link (FR-008).
-  **Auth**: owner only (per spec assumption; members may view but not generate).
+- **Behavior**: returns the server's reusable `inviteCode`, which is generated once at server
+  creation (FR-008). No separate generate/rotate mutation exists in v1 (kept simple; the
+  spec has no code-rotation requirement). **Auth**: caller MUST be a member.
 
 ### `servers.getInvitePreview` (query)
 - **Args**: `{ inviteCode: v.string() }`
@@ -64,7 +73,7 @@ Covers FR-006–FR-016, FR-012a.
 
 ### `channels.list` (query)
 - **Args**: `{ serverId: Id<"servers"> }`
-- **Returns**: `v.array({ _id, name, type, position })`
+- **Returns**: `v.array({ _id, name, type, _creationTime })` (ordered by `_creationTime`)
 - **Auth**: caller MUST be a member; returns all channels (FR-013).
 
 ### `channels.create` (mutation)

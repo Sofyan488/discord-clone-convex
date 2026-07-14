@@ -27,11 +27,23 @@ Represents an account. Profile fields are populated by the Convex Auth password 
 |-------|------|-------|
 | name | `v.string()` | Display name (FR-004). Required. |
 | email | `v.string()` | Login identifier (from auth). |
-| avatarUrl | `v.optional(v.string())` | Avatar image URL or generated default (FR-004). |
+| avatarUrl | `v.optional(v.string())` | Avatar URL. See avatar provisioning note below. |
+| deleted | `v.optional(v.boolean())` | Tombstone flag set by account deletion (FR-012a). |
 
 **Indexes**: `by_email` on `["email"]` (lookup / uniqueness check).
 
 **Validation**: `name` non-empty, ≤ 80 chars; `email` unique (enforced in sign-up flow).
+
+**Avatar provisioning**: file uploads are out of scope (FR-035), so an avatar is either an
+external image URL supplied at sign-up or a **generated default** derived deterministically
+from the user's id/initials when `avatarUrl` is absent. No upload/storage feature is built.
+
+**Account deletion (tombstone)**: to satisfy FR-012a while keeping historical messages and
+DMs renderable (FR-026a), account deletion does NOT hard-delete the `users` row. It sets
+`deleted: true`, removes the auth identity (sign-in disabled), and cascades per the
+"Account deletion" rules below. A tombstoned user renders their retained `name`/avatar in
+old messages but cannot log in, cannot be messaged (shares no active server), and does not
+appear in any member list.
 
 ---
 
@@ -81,9 +93,11 @@ Text or voice channel within a server (FR-013–FR-016, FR-029a).
 | serverId | `v.id("servers")` | |
 | name | `v.string()` | |
 | type | `v.union(v.literal("text"), v.literal("voice"))` | |
-| position | `v.number()` | Ordering within the sidebar. |
 
 **Indexes**: `by_server` on `["serverId"]`; `by_server_and_type` on `["serverId", "type"]`.
+
+**Ordering**: channels are displayed in creation order via the built-in `_creationTime`
+(no separate `position` field — the spec has no reorder feature).
 
 **Validation**: `name` 1–100 chars. Deleting a **text** channel cascades to its messages and
 typing rows (FR-016); deleting a **voice** channel cascades to its call/participants/signals.
@@ -101,10 +115,11 @@ A message within a text channel (FR-017–FR-023a).
 | content | `v.string()` | Message body. |
 | editedAt | `v.optional(v.number())` | Set on edit → renders "edited" marker (FR-020). |
 
-**Indexes**: `by_channel` on `["channelId"]` (paginated newest-first, FR-023);
-`by_author` on `["authorId"]`.
+**Indexes**: `by_channel` on `["channelId"]` (paginated newest-first, FR-023).
 
 **Validation**: `content` 1–4000 chars, non-empty after trim. Timestamp shown = `_creationTime`.
+Edit/delete fetch the message by `_id`, so no `by_author` index is needed (no feature lists
+a user's messages).
 
 **Retention**: indefinite; removed only by author delete or channel/server cascade (FR-023a).
 
@@ -139,9 +154,10 @@ A message inside a DM thread (FR-027, FR-028).
 | content | `v.string()` | |
 | editedAt | `v.optional(v.number())` | Edited marker (FR-028). |
 
-**Indexes**: `by_thread` on `["threadId"]` (paginated); `by_author` on `["authorId"]`.
+**Indexes**: `by_thread` on `["threadId"]` (paginated).
 
-**Validation**: same content rules as `messages`. Author-only edit/delete (FR-028).
+**Validation**: same content rules as `messages`. Author-only edit/delete (FR-028). Edit/delete
+fetch by `_id`, so no `by_author` index is needed.
 
 ---
 
@@ -175,7 +191,11 @@ Heartbeat-based presence (FR-005, R3).
 
 **Indexes**: `by_user` on `["userId"]`.
 
-**Validation**: one row per user (upsert). Online derived at read time (30s window).
+**Validation**: one row per user (upsert). Online derived at read time (~20s window). Presence
+is **per user, not per tab**: any active tab refreshes `lastSeen`, so closing one of several
+tabs keeps the user online (fixes the multi-session edge case). There is no explicit
+`goOffline`; offline is reached purely by the staleness window when the last tab stops
+heartbeating.
 
 ---
 
@@ -208,12 +228,20 @@ Per-participant media state within a call (FR-030–FR-033, R9).
 | cameraEnabled | `v.boolean()` | Toggled by mutation (FR-031). |
 | speaking | `v.boolean()` | Client-detected, throttled write (FR-032). |
 | joinedAt | `v.number()` | |
+| lastSeen | `v.number()` | Refreshed by the in-call heartbeat; used to reap ghosts. |
 
 **Indexes**: `by_call` on `["callId"]`; `by_call_and_user` on `["callId", "userId"]`;
 `by_user` on `["userId"]`.
 
 **Validation**: one row per (callId, userId). Join rejected when a call already has 4
 participants (FR-030). Leaving removes the row; removing the last row deactivates the call.
+
+**Ghost reaping**: an abrupt disconnect (tab crash) leaves no `leave` call, so the same
+client heartbeat that pings presence also calls `calls.heartbeat` to refresh `lastSeen`.
+Participants stale beyond the presence window (~20s) are treated as gone: they are excluded
+from `calls.getState` at read time and removed by the same sweep that cleans presence,
+keeping the participant list and the 4-person cap accurate. Peers additionally drop a tile
+immediately on `iceConnectionState = failed/disconnected` for fast UI feedback.
 
 ---
 
@@ -254,8 +282,23 @@ users 1───∞ serverMembers ∞───1 servers 1───∞ channels 1
 
 - Delete **text channel** → delete its `messages` + `typingIndicators`.
 - Delete **voice channel** → delete its `calls` + `callParticipants` + `signals`.
-- Delete **server** (incl. owner departure/account deletion) → delete its `channels`,
-  `messages`, `typingIndicators`, `serverMembers`, `calls`, `callParticipants`, `signals`.
+- Delete **server** → delete its `channels`, `messages`, `typingIndicators`,
+  `serverMembers`, `calls`, `callParticipants`, `signals`.
 - Delete **message / directMessage** → remove the single document (author-initiated).
 - DM threads and their messages are **not** cascaded by server deletion (FR-026a: DMs
   persist).
+
+## Membership departure & account deletion (FR-012a)
+
+- **Member leaves a server** (`servers.leave`, non-owner): delete only that user's
+  `serverMembers` row plus their `typingIndicators`/`callParticipants` in that server. Their
+  authored `messages` remain (like Discord).
+- **Owner leaves a server** (`servers.leave`, owner) OR **owner deletes account**: the server
+  is deleted with the full server cascade above (ownership is never transferred in v1).
+- **Account deletion** (`users.deleteAccount`): (1) cascade-delete every server the user
+  owns; (2) delete the user's `serverMembers` in all other servers; (3) delete the user's
+  `presence`, `typingIndicators`, `callParticipants`, and pending `signals`; (4) **retain**
+  the user's DM threads, `directMessages`, and authored channel `messages`; (5) set the
+  `users` row `deleted: true` and remove the auth identity. The retained `users` tombstone
+  keeps historical content renderable and satisfies FR-026a (DMs persist) without dangling
+  id references.

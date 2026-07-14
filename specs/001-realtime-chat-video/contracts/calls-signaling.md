@@ -28,13 +28,24 @@ authoritative participant state and relays signaling only (R6–R9).
 - **Returns**: `v.null()`
 - **Behavior**: updates the caller's participant media flags; `speaking` is written by the
   client's WebAudio detector (throttled). Visible to all reactively (FR-031, FR-032, SC-007).
-  **Auth**: participant.
+  This is a **flag-only** write: the client mirrors it by flipping `track.enabled` on the
+  already-published audio/video tracks, so mic/camera toggles never trigger WebRTC
+  renegotiation (see client contract below). **Auth**: participant.
+
+### `calls.heartbeat` (mutation)
+- **Args**: `{ callId: Id<"calls"> }`
+- **Returns**: `v.null()`
+- **Behavior**: refreshes the caller's `callParticipants.lastSeen` (~10s interval, piggybacked
+  on the presence heartbeat) so abruptly-disconnected participants can be reaped. **Auth**:
+  participant.
 
 ### `calls.getState` (query)
 - **Args**: `{ channelId: v.optional(Id<"channels">), threadId: v.optional(Id<"directMessageThreads">) }`
 - **Returns**: `v.union(v.null(), { callId, participants: v.array({ userId, name, avatarUrl, micEnabled, cameraEnabled, speaking }) })`
 - **Behavior**: reactive current call + participant states, so both joined participants and
-  channel observers see who is connected/muted/speaking (FR-032). **Auth**: member/participant.
+  channel observers see who is connected/muted/speaking (FR-032). Participants whose
+  `lastSeen` is stale (beyond the ~20s window) are excluded as ghosts and do not count toward
+  the 4-person cap. **Auth**: member/participant.
 
 ## Signaling relay (R7)
 
@@ -62,7 +73,11 @@ authoritative participant state and relays signaling only (R6–R9).
 - `RTCPeerConnection` configured with `iceServers: [{ urls: "stun:stun.l.google.com:19302" }]`
   (R8). No TURN — connection may fail behind symmetric NAT; the UI MUST show a clear failure
   state.
-- Full-mesh: one connection per remote peer, max 3 peers (4-party call). Local mic/camera
-  `MediaStream` tracks are added to every connection; remote tracks render as video tiles.
+- Full-mesh: one connection per remote peer, max 3 peers (4-party call). At join the client
+  acquires **both** audio and video tracks via `getUserMedia` and adds them to every
+  connection up front. Mic/camera toggles flip `track.enabled` (and write the flag via
+  `calls.setMedia`) rather than adding/removing tracks — so there is **no renegotiation** and
+  no glare from toggling. Remote tracks render as video tiles; a disabled remote video track
+  shows an avatar placeholder.
 - On `iceConnectionState` transitioning to `failed`/`disconnected`, the client marks that
   peer disconnected in the UI (edge case: unexpected disconnect).

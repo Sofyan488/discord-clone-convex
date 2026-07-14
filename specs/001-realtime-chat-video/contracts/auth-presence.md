@@ -22,26 +22,26 @@ profile and presence functions are app-defined.
 - **Returns**: `v.union(v.null(), { _id, name, email, avatarUrl })`
 - **Auth**: returns `null` if unauthenticated, else the caller's user document.
 
-## `users.updateProfile` (mutation)
+## `users.deleteAccount` (mutation)
 
-- **Args**: `{ name: v.optional(v.string()), avatarUrl: v.optional(v.string()) }`
+- **Args**: `{}`
 - **Returns**: `v.null()`
-- **Auth**: caller must be authenticated; updates only their own `users` row.
-- **Validation**: `name` 1–80 chars when present.
+- **Behavior**: deletes the caller's account per the FR-012a rules (data-model → "Membership
+  departure & account deletion"): cascade-delete owned servers, remove memberships in other
+  servers, delete the caller's presence/typing/callParticipants/pending signals, retain DMs
+  and authored messages, set `users.deleted = true`, and remove the auth identity. Large
+  cascades chunk across scheduled mutations (R11).
+- **Auth**: authenticated caller only; operates solely on the caller's own account.
 
 ## `presence.heartbeat` (mutation)
 
 - **Args**: `{}`
 - **Returns**: `v.null()`
-- **Behavior**: upserts `presence` row for the caller with `lastSeen = now` (FR-005, R3).
+- **Behavior**: upserts the caller's single `presence` row with `lastSeen = now` (FR-005, R3).
+  Any active tab refreshes it, so presence is per-user and multi-session-safe. Called on an
+  interval (~10s) while the tab is active. There is intentionally **no** `goOffline`; offline
+  is reached by the staleness window when the last tab stops heartbeating.
 - **Auth**: authenticated caller only.
-
-## `presence.goOffline` (mutation)
-
-- **Args**: `{}`
-- **Returns**: `v.null()`
-- **Behavior**: sets `lastSeen` far in the past (or removes the row) so the user flips to
-  offline immediately on explicit logout / tab close (R3 refinement).
 
 ## `presence.listForServer` (query)
 
