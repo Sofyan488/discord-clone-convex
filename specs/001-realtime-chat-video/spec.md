@@ -318,8 +318,11 @@ and video tiles update for the other participant, then leave and confirm disconn
   and avatar in under 2 minutes.
 - **SC-002**: A message sent in a channel appears for other members viewing that channel in
   under 1 second in typical conditions, without any manual refresh.
-- **SC-003**: A user's online/offline status change is reflected to others within 5 seconds of
-  connecting or disconnecting.
+- **SC-003**: A user's online status is reflected to others within 5 seconds of connecting or
+  of an explicit logout. For an involuntary disconnect (network loss, crash, tab closed
+  without logout), the user is shown offline within ~20 seconds (bounded by the presence
+  heartbeat staleness window). Presence is per user, not per session: closing one of several
+  open sessions does not mark the user offline while another remains active.
 - **SC-004**: A server owner can create a server, generate an invite, and have a second user
   join it in under 3 minutes end to end.
 - **SC-005**: Message edits and deletions propagate to all viewers within 1 second and are

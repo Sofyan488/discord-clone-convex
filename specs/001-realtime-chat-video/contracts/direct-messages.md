@@ -27,10 +27,11 @@ Covers FR-025–FR-028, FR-026a.
   be one of the thread's two participants (`FORBIDDEN`).
 
 ### `directMessages.send` (mutation)
-- **Args**: `{ threadId: Id<"directMessageThreads">, content: v.string() }`
+- **Args**: `{ threadId: Id<"directMessageThreads">, content: v.string(), clientKey: v.optional(v.string()) }`
 - **Returns**: `{ messageId: Id<"directMessages"> }`
 - **Behavior**: inserts a DM; delivered to the other participant in real time (FR-027). No
-  shared-server check here (FR-026a). **Auth**: participant only.
+  shared-server check here (FR-026a). Optional `clientKey` dedupes reconnect retries the same
+  way as `messages.send` (SC-009). **Auth**: participant only.
 - **Validation**: `content` trimmed, 1–4000 chars.
 
 ### `directMessages.edit` (mutation)

@@ -13,10 +13,13 @@ Covers FR-017–FR-024, FR-023a.
   of the channel's server (`NOT_MEMBER`).
 
 ### `messages.send` (mutation)
-- **Args**: `{ channelId: Id<"channels">, content: v.string() }`
+- **Args**: `{ channelId: Id<"channels">, content: v.string(), clientKey: v.optional(v.string()) }`
 - **Returns**: `{ messageId: Id<"messages"> }`
 - **Behavior**: inserts a message authored by the caller; becomes visible to all channel
-  subscribers in real time (FR-017, FR-018). **Auth**: member of the server.
+  subscribers in real time (FR-017, FR-018). If `clientKey` is provided and a recent message
+  from the same author in this channel already has it, the existing message is returned
+  instead of inserting a duplicate (idempotent reconnect retries, SC-009). **Auth**: member of
+  the server.
 - **Validation**: `content` trimmed, 1–4000 chars (`VALIDATION` otherwise).
 
 ### `messages.edit` (mutation)

@@ -114,8 +114,10 @@ A message within a text channel (FR-017–FR-023a).
 | authorId | `v.id("users")` | Author (FR-019, authorship checks FR-022). |
 | content | `v.string()` | Message body. |
 | editedAt | `v.optional(v.number())` | Set on edit → renders "edited" marker (FR-020). |
+| clientKey | `v.optional(v.string())` | Client-supplied idempotency key; dedupes reconnect retries (SC-009). |
 
-**Indexes**: `by_channel` on `["channelId"]` (paginated newest-first, FR-023).
+**Indexes**: `by_channel` on `["channelId"]` (paginated newest-first, FR-023);
+`by_channel_and_clientKey` on `["channelId", "clientKey"]` (idempotent-send lookup, SC-009).
 
 **Validation**: `content` 1–4000 chars, non-empty after trim. Timestamp shown = `_creationTime`.
 Edit/delete fetch the message by `_id`, so no `by_author` index is needed (no feature lists
@@ -153,8 +155,10 @@ A message inside a DM thread (FR-027, FR-028).
 | authorId | `v.id("users")` | |
 | content | `v.string()` | |
 | editedAt | `v.optional(v.number())` | Edited marker (FR-028). |
+| clientKey | `v.optional(v.string())` | Client-supplied idempotency key; dedupes reconnect retries (SC-009). |
 
-**Indexes**: `by_thread` on `["threadId"]` (paginated).
+**Indexes**: `by_thread` on `["threadId"]` (paginated);
+`by_thread_and_clientKey` on `["threadId", "clientKey"]` (idempotent-send lookup, SC-009).
 
 **Validation**: same content rules as `messages`. Author-only edit/delete (FR-028). Edit/delete
 fetch by `_id`, so no `by_author` index is needed.

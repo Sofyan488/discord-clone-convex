@@ -41,7 +41,7 @@ only, no TURN in v1 (calls may fail behind symmetric NAT — accepted risk); env
 `.env.local` only; no component library (Tailwind primitives only)
 
 **Scale/Scope**: Up to ~500 members per server and ~2,000 concurrent users (SC-010); 5
-user stories, 11 Convex tables, ~40 Convex functions
+user stories, 12 Convex tables, ~40 Convex functions
 
 ## Constitution Check
 
