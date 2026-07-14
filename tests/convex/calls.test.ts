@@ -62,6 +62,60 @@ describe("calls.join / leave", () => {
     });
     expect(state).toBeNull();
   });
+
+  // Regression: a leftover inactive call row (from a prior call that ended)
+  // must not shadow the room. Before the fix, findActiveCall read only the
+  // first row; a stale inactive one made join create a second row and getState
+  // return null forever ("Waiting for others to join…").
+  test("a leftover inactive call row does not shadow a fresh join", async () => {
+    const t = setup();
+    const { owner, members, channelId } = await voiceSetup(t, 1);
+
+    // Simulate a prior call for this channel that already ended.
+    await t.run((ctx) =>
+      ctx.db.insert("calls", { channelId, active: false }),
+    );
+
+    const r1 = await asUser(t, owner).mutation(api.calls.join, { channelId });
+    const r2 = await asUser(t, members[0]).mutation(api.calls.join, {
+      channelId,
+    });
+    // Both must land in the SAME active room, not separate new rows.
+    expect(r2.callId).toBe(r1.callId);
+
+    const ownerState = await asUser(t, owner).query(api.calls.getState, {
+      channelId,
+    });
+    const memberState = await asUser(t, members[0]).query(api.calls.getState, {
+      channelId,
+    });
+    expect(ownerState?.callId).toBe(r1.callId);
+    expect(ownerState?.participants).toHaveLength(2);
+    expect(memberState?.callId).toBe(r1.callId);
+  });
+
+  // Regression: rejoining a channel after everyone left must produce a call
+  // that getState can find (no stale-row shadowing).
+  test("rejoining after the room emptied still connects", async () => {
+    const t = setup();
+    const { owner, channelId } = await voiceSetup(t, 0);
+    const first = await asUser(t, owner).mutation(api.calls.join, {
+      channelId,
+    });
+    await asUser(t, owner).mutation(api.calls.leave, {
+      callId: first.callId,
+    });
+
+    const second = await asUser(t, owner).mutation(api.calls.join, {
+      channelId,
+    });
+    const state = await asUser(t, owner).query(api.calls.getState, {
+      channelId,
+    });
+    expect(state).not.toBeNull();
+    expect(state?.callId).toBe(second.callId);
+    expect(state?.participants).toHaveLength(1);
+  });
 });
 
 describe("calls.getState / setMedia / heartbeat", () => {

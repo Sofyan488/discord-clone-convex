@@ -40,16 +40,20 @@ async function authorizeTarget(
 }
 
 async function findActiveCall(ctx: QueryCtx | MutationCtx, target: Target) {
-  const call = target.channelId
+  // There can be leftover inactive rows (a prior call that ended) and, from
+  // older data, more than one row per channel/DM. Scan them all and return the
+  // active one. `collect()` is index-ordered, so every client converges on the
+  // same call rather than each landing in its own row.
+  const calls = target.channelId
     ? await ctx.db
         .query("calls")
         .withIndex("by_channel", (q) => q.eq("channelId", target.channelId))
-        .first()
+        .collect()
     : await ctx.db
         .query("calls")
         .withIndex("by_thread", (q) => q.eq("threadId", target.threadId))
-        .first();
-  return call && call.active ? call : null;
+        .collect();
+  return calls.find((c) => c.active) ?? null;
 }
 
 function isFresh(p: Doc<"callParticipants">, now: number) {
@@ -164,7 +168,9 @@ export const leave = mutation({
       .withIndex("by_call", (q) => q.eq("callId", callId))
       .collect();
     if (remaining.length === 0) {
-      await ctx.db.patch(callId, { active: false });
+      // Delete the room outright rather than leaving an inactive row behind:
+      // stale rows used to shadow the next call's active row (see findActiveCall).
+      await ctx.db.delete(callId);
     }
     return null;
   },
