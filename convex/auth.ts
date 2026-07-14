@@ -7,11 +7,12 @@ export const { auth, signIn, signOut, store } = convexAuth({
   providers: [
     Password({
       profile(params) {
-        return {
+        const base = {
           email: params.email as string,
           name: (params.name as string | undefined) ?? "",
-          avatarUrl: params.avatarUrl as string | undefined,
         };
+        const avatarUrl = params.avatarUrl as string | undefined;
+        return avatarUrl ? { ...base, avatarUrl } : base;
       },
     }),
   ],

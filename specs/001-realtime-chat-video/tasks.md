@@ -72,20 +72,20 @@ online→offline on disconnect.
 
 ### Tests for User Story 1 (write first, must fail) ⚠️
 
-- [ ] T016 [P] [US1] `convex-test` for profile creation on sign-up + `users.getCurrent` in `tests/convex/users.test.ts`
-- [ ] T017 [P] [US1] `convex-test` for `presence.heartbeat` upsert and online/offline derivation (~20s window, multi-session safe) in `tests/convex/presence.test.ts`
-- [ ] T018 [P] [US1] `convex-test` for `presence.listForServer` membership gating (non-member → `NOT_MEMBER`) in `tests/convex/presence.test.ts`
-- [ ] T019 [P] [US1] Component tests for sign-up and log-in forms (validation, error display) in `tests/unit/auth.test.tsx`
+- [X] T016 [P] [US1] `convex-test` for profile creation on sign-up + `users.getCurrent` in `tests/convex/users.test.ts`
+- [X] T017 [P] [US1] `convex-test` for `presence.heartbeat` upsert and online/offline derivation (~20s window, multi-session safe) in `tests/convex/presence.test.ts`
+- [X] T018 [P] [US1] `convex-test` for `presence.listForServer` membership gating (non-member → `NOT_MEMBER`) in `tests/convex/presence.test.ts`
+- [X] T019 [P] [US1] Component tests for sign-up and log-in forms (validation, error display) in `tests/unit/auth.test.tsx`
 
 ### Implementation for User Story 1
 
-- [ ] T020 [US1] Implement `users.getCurrent` query in `convex/users.ts`
-- [ ] T021 [US1] Implement `presence.heartbeat` mutation and `presence.listForServer` query in `convex/presence.ts` (no `goOffline`; per-user row)
-- [ ] T022 [P] [US1] Build Sign Up screen (display name, avatar URL/generated default, email, password) in `src/features/auth/SignUp.tsx`
-- [ ] T023 [P] [US1] Build Log In screen with error messaging in `src/features/auth/LogIn.tsx`
-- [ ] T024 [US1] Implement `src/hooks/usePresence.ts` (start heartbeat via `useHeartbeat` while authenticated) and wire `useAuthActions` sign-in/out into the shell
-- [ ] T025 [US1] Render member online/offline status indicator component in `src/features/servers/MemberList.tsx` (consumes `presence.listForServer`)
-- [ ] T026 [US1] E2E: two-client presence online→offline in `tests/e2e/presence.spec.ts`
+- [X] T020 [US1] Implement `users.getCurrent` query in `convex/users.ts`
+- [X] T021 [US1] Implement `presence.heartbeat` mutation and `presence.listForServer` query in `convex/presence.ts` (no `goOffline`; per-user row)
+- [X] T022 [P] [US1] Build Sign Up screen (display name, avatar URL/generated default, email, password) — combined into `src/features/auth/AuthScreen.tsx`
+- [X] T023 [P] [US1] Build Log In screen with error messaging — combined into `src/features/auth/AuthScreen.tsx` (mode toggle)
+- [X] T024 [US1] Implement `src/hooks/usePresence.ts` (start heartbeat via `useHeartbeat` while authenticated) and wire `useAuthActions` sign-in/out into the shell
+- [X] T025 [US1] Render member online/offline status indicator component in `src/features/servers/MemberList.tsx` (consumes `presence.listForServer`)
+- [ ] T026 [US1] E2E: two-client presence online→offline in `tests/e2e/presence.spec.ts` — **authored (skipped); pending live-stack run (`npx playwright install` + dev/convex)**
 
 **Checkpoint**: Auth + presence fully functional and independently testable.
 
@@ -101,21 +101,21 @@ renames and removes B.
 
 ### Tests for User Story 2 (write first, must fail) ⚠️
 
-- [ ] T027 [P] [US2] `convex-test` for `servers.create` (owner membership + default "general" text channel) in `tests/convex/servers.test.ts`
-- [ ] T028 [P] [US2] `convex-test` for `servers.joinByInvite` / `getInvitePreview` (valid, invalid, already-member) in `tests/convex/servers.test.ts`
-- [ ] T029 [P] [US2] `convex-test` for owner-only `rename`/`removeMember`/`remove` and `leave` (member vs owner-cascade) in `tests/convex/servers.test.ts`
-- [ ] T030 [P] [US2] `convex-test` for `users.deleteAccount` cascade + tombstone, retaining DMs/messages, in `tests/convex/account.test.ts`
+- [X] T027 [P] [US2] `convex-test` for `servers.create` (owner membership + default "general" text channel) in `tests/convex/servers.test.ts`
+- [X] T028 [P] [US2] `convex-test` for `servers.joinByInvite` / `getInvitePreview` (valid, invalid, already-member) in `tests/convex/servers.test.ts`
+- [X] T029 [P] [US2] `convex-test` for owner-only `rename`/`removeMember`/`remove` and `leave` (member vs owner-cascade) in `tests/convex/servers.test.ts`
+- [X] T030 [P] [US2] `convex-test` for `users.deleteAccount` cascade + tombstone, retaining DMs/messages, in `tests/convex/account.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T031 [US2] Implement server functions in `convex/servers.ts`: `create` (with general channel + inviteCode), `rename`, `remove` (cascade), `removeMember`, `leave`, `listMine`, `getMembers`, `getInvite`, `getInvitePreview`, `joinByInvite`
-- [ ] T032 [US2] Implement `users.deleteAccount` in `convex/users.ts` (cascade owned servers, drop memberships/ephemeral rows, retain DMs/messages, set `deleted`, remove auth identity) using `convex/lib/cascade.ts`
-- [ ] T033 [P] [US2] Build server rail + "Create Server" modal in `src/features/servers/ServerRail.tsx` and `CreateServerModal.tsx`
-- [ ] T034 [P] [US2] Build invite modal (show/copy link) in `src/features/servers/InviteModal.tsx`
-- [ ] T035 [US2] Build invite-accept route/screen in `src/features/servers/JoinByInvite.tsx` (uses `getInvitePreview` + `joinByInvite`) and add route in `src/router.tsx`
-- [ ] T036 [US2] Wire member list with presence + owner actions (rename server, remove member) in `src/features/servers/MemberList.tsx` and `ServerHeader.tsx`
-- [ ] T037 [P] [US2] Add account settings with delete-account action in `src/features/auth/AccountSettings.tsx`
-- [ ] T038 [US2] E2E: create → invite → join → member list → rename → remove member in `tests/e2e/servers.spec.ts`
+- [X] T031 [US2] Implement server functions in `convex/servers.ts`: `create` (with general channel + inviteCode), `rename`, `remove` (cascade), `removeMember`, `leave`, `listMine`, `getInvite`, `getInvitePreview`, `joinByInvite` (member+presence listing consolidated into `presence.listForServer`)
+- [X] T032 [US2] Implement `users.deleteAccount` in `convex/users.ts` (cascade owned servers, drop memberships/ephemeral rows, retain DMs/messages, set `deleted`, remove auth identity) using `convex/lib/cascade.ts`
+- [X] T033 [P] [US2] Build server rail + "Create Server" modal in `src/features/servers/ServerRail.tsx` and `CreateServerModal.tsx`
+- [X] T034 [P] [US2] Build invite modal (show/copy link) in `src/features/servers/InviteModal.tsx`
+- [X] T035 [US2] Build invite-accept route/screen in `src/features/servers/JoinByInvite.tsx` (uses `getInvitePreview` + `joinByInvite`) and add route in `src/router.tsx` (+ `ServerView`, `ServersHome`)
+- [X] T036 [US2] Wire member list with presence + owner actions (rename server, remove member) in `src/features/servers/MemberList.tsx` and `ServerHeader.tsx`
+- [X] T037 [P] [US2] Add account settings with delete-account action in `src/features/auth/AccountSettings.tsx`
+- [ ] T038 [US2] E2E: create → invite → join → member list → rename → remove member in `tests/e2e/servers.spec.ts` — **authored; pending live-stack run (`npx playwright install` + dev/convex)**
 
 **Checkpoint**: Servers, membership, invites, and lifecycle work end-to-end.
 

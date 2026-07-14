@@ -1,9 +1,9 @@
 import { ReactNode } from "react";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { Spinner } from "@/components/Spinner";
+import { AuthScreen } from "./AuthScreen";
 
-// Gates the app behind authentication. The unauthenticated placeholder is
-// replaced by real Sign Up / Log In screens in User Story 1 (T022/T023).
+// Gates the app behind authentication.
 export function AuthGate({ children }: { children: ReactNode }) {
   return (
     <>
@@ -14,14 +14,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       </AuthLoading>
 
       <Unauthenticated>
-        <div className="grid h-full w-full place-items-center p-8 text-center">
-          <div>
-            <h1 className="mb-2 text-2xl font-bold">Discord Clone</h1>
-            <p className="text-discord-muted">
-              Authentication UI arrives in User Story 1.
-            </p>
-          </div>
-        </div>
+        <AuthScreen />
       </Unauthenticated>
 
       <Authenticated>{children}</Authenticated>

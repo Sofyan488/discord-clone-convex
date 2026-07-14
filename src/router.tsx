@@ -1,10 +1,10 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { AuthGate } from "./features/auth/AuthGate";
+import { ServersHome } from "./features/servers/ServersHome";
+import { ServerView } from "./features/servers/ServerView";
+import { JoinByInvite } from "./features/servers/JoinByInvite";
 
-// Route table. Feature routes (invite accept, DMs, channels) are added by their
-// respective user-story phases; the foundational shell provides the protected
-// layout behind the auth gate.
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -14,9 +14,9 @@ export const router = createBrowserRouter([
       </AuthGate>
     ),
     children: [
-      // Placeholder index; channel/DM routes added in US3/US4.
-      { index: true, element: <Navigate to="/channels/@me" replace /> },
-      { path: "channels/*", element: null },
+      { index: true, element: <ServersHome /> },
+      { path: "servers/:serverId", element: <ServerView /> },
+      { path: "invite/:code", element: <JoinByInvite /> },
     ],
   },
 ]);
