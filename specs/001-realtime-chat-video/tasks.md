@@ -132,25 +132,25 @@ scroll loads history; typing indicator shows.
 
 ### Tests for User Story 3 (write first, must fail) ⚠️
 
-- [ ] T039 [P] [US3] `convex-test` for `channels` create/rename/remove incl. text-channel message cascade in `tests/convex/channels.test.ts`
-- [ ] T040 [P] [US3] `convex-test` for `messages` send/edit/delete authorship enforcement (non-author → `NOT_AUTHOR`) and member gating in `tests/convex/messages.test.ts`
-- [ ] T041 [P] [US3] `convex-test` for `messages.list` pagination (newest-first pages) in `tests/convex/messages.test.ts`
-- [ ] T042 [P] [US3] `convex-test` for `typing` set/clear/list with staleness window in `tests/convex/typing.test.ts`
-- [ ] T043 [P] [US3] Component test for message list + composer + edit/delete UI in `tests/unit/messages.test.tsx`
-- [ ] T043a [P] [US3] `convex-test` for send idempotency: a duplicate `messages.send` with the same client-supplied `clientKey` (e.g. after a reconnect retry) is suppressed, not duplicated (SC-009) in `tests/convex/messages.test.ts`
+- [X] T039 [P] [US3] `convex-test` for `channels` create/rename/remove incl. text-channel message cascade in `tests/convex/channels.test.ts`
+- [X] T040 [P] [US3] `convex-test` for `messages` send/edit/delete authorship enforcement (non-author → `NOT_AUTHOR`) and member gating in `tests/convex/messages.test.ts`
+- [X] T041 [P] [US3] `convex-test` for `messages.list` pagination (newest-first pages) in `tests/convex/messages.test.ts`
+- [X] T042 [P] [US3] `convex-test` for `typing` set/clear/list with staleness window in `tests/convex/typing.test.ts`
+- [X] T043 [P] [US3] Component test for message list + composer + edit/delete UI in `tests/unit/messages.test.tsx`
+- [X] T043a [P] [US3] `convex-test` for send idempotency: a duplicate `messages.send` with the same client-supplied `clientKey` (e.g. after a reconnect retry) is suppressed, not duplicated (SC-009) in `tests/convex/messages.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T044 [US3] Implement `convex/channels.ts`: `list`, `create`, `rename`, `remove` (cascade via helpers)
-- [ ] T045 [US3] Implement `convex/messages.ts`: `list` (paginated, joins author name/avatar), `send`, `edit` (sets `editedAt`), `remove`
-- [ ] T045a [US3] Add idempotent send (SC-009): accept an optional client-supplied `clientKey` on `messages.send`, dedupe against a recent-window lookup, add `clientKey` field + supporting index to `messages` in `convex/schema.ts`, and have the composer generate/retry with a stable key on reconnect in `src/features/messages/MessageComposer.tsx`
-- [ ] T046 [P] [US3] Implement `convex/typing.ts`: `setTyping`, `clearTyping`, `list`
-- [ ] T047 [P] [US3] Build channel sidebar + channel management (create/rename/delete, text/voice) in `src/features/channels/ChannelSidebar.tsx` and `ChannelManageModal.tsx`
-- [ ] T048 [US3] Build message list with infinite scroll (via `usePaginatedQuery`) in `src/features/messages/MessageList.tsx`
-- [ ] T049 [US3] Build message composer with edit/delete of own messages and "edited" marker in `src/features/messages/MessageComposer.tsx` and `MessageItem.tsx`
-- [ ] T050 [P] [US3] Implement `src/hooks/useTyping.ts` (throttled setTyping, clear on blur/send) and typing indicator UI in `src/features/messages/TypingIndicator.tsx`
-- [ ] T051 [US3] E2E: two-client live message + edit + delete + typing + history scroll in `tests/e2e/messaging.spec.ts`
-- [ ] T051a [US3] E2E: simulate a brief disconnect/reconnect during send and assert the message is delivered exactly once (no loss, no duplicate — SC-009) in `tests/e2e/messaging.spec.ts`
+- [X] T044 [US3] Implement `convex/channels.ts`: `list`, `create`, `rename`, `remove` (cascade via helpers)
+- [X] T045 [US3] Implement `convex/messages.ts`: `list` (paginated, joins author name/avatar), `send`, `edit` (sets `editedAt`), `remove`
+- [X] T045a [US3] Add idempotent send (SC-009): accept an optional client-supplied `clientKey` on `messages.send`, dedupe against a recent-window lookup, add `clientKey` field + supporting index to `messages` in `convex/schema.ts`, and have the composer generate/retry with a stable key on reconnect in `src/features/messages/MessageComposer.tsx`
+- [X] T046 [P] [US3] Implement `convex/typing.ts`: `setTyping`, `clearTyping`, `list`
+- [X] T047 [P] [US3] Build channel sidebar + channel management (create/rename/delete, text/voice) in `src/features/channels/ChannelSidebar.tsx` and `ChannelManageModal.tsx`
+- [X] T048 [US3] Build message list with infinite scroll (via `usePaginatedQuery`) in `src/features/messages/MessageList.tsx` (column-reverse + "Load older" pagination)
+- [X] T049 [US3] Build message composer with edit/delete of own messages and "edited" marker in `src/features/messages/MessageComposer.tsx` and `MessageItem.tsx`
+- [X] T050 [P] [US3] Implement `src/hooks/useTyping.ts` (throttled setTyping, clear on blur/send) and typing indicator UI in `src/features/messages/TypingIndicator.tsx`
+- [ ] T051 [US3] E2E: two-client live message + edit + delete + typing + history scroll in `tests/e2e/messaging.spec.ts` — **authored (skipped); pending live-stack run**
+- [ ] T051a [US3] E2E: simulate a brief disconnect/reconnect during send and assert the message is delivered exactly once (no loss, no duplicate — SC-009) in `tests/e2e/messaging.spec.ts` — **authored (skipped); pending live-stack run**
 
 **Checkpoint**: Core MVP (US1+US2+US3) delivers a usable chat product.
 
