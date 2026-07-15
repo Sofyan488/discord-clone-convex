@@ -5,7 +5,7 @@ servers, talk in text channels, exchange direct messages, and jump into
 full-mesh voice/video calls — all with live presence and typing indicators,
 backed by a fully reactive database.
 
-- **Live demo:** _pending deployment — added after the Vercel deploy succeeds_
+- **Live demo:** https://discord-clone-gilt-mu.vercel.app
 - **Repository:** https://github.com/Sofyan488/discord-clone-convex
 
 > Built with **Spec-Driven Development** (GitHub Spec Kit) and **Claude Code**.
@@ -339,8 +339,14 @@ Call tests run headless with fake media
 
 ## Deployment
 
-- **Frontend:** deployed to **Vercel** (static Vite build). Production URL: _pending —
-  added once the deploy succeeds and is smoke-tested._
+- **Frontend:** deployed to **Vercel** (static Vite build).
+  Production URL: **https://discord-clone-gilt-mu.vercel.app**
+  (smoke-tested live: auth → prod Convex, server/channel creation, real-time
+  messaging, voice-channel join/leave, DMs — no console errors).
+  The Vercel build command runs `npx convex deploy --cmd 'npm run build'` so the
+  Convex generated code exists at build time; `CONVEX_DEPLOY_KEY`,
+  `VITE_CONVEX_URL`, and `VITE_CONVEX_SITE_URL` are configured as Vercel project
+  environment variables (no auth private keys are exposed to the frontend).
 - **Backend:** Convex cloud deployment. The frontend's `VITE_CONVEX_URL` /
   `VITE_CONVEX_SITE_URL` must point at the **cloud** deployment (never a local
   `127.0.0.1:3210` URL). Auth keys (`JWT_PRIVATE_KEY`, `JWKS`, `SITE_URL`) are set on
