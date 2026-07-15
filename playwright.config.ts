@@ -11,6 +11,14 @@ export default defineConfig({
   use: {
     baseURL: "http://localhost:5173",
     trace: "on-first-retry",
+    // Grant + fake camera/mic so getUserMedia resolves headlessly (US5 calls).
+    permissions: ["microphone", "camera"],
+    launchOptions: {
+      args: [
+        "--use-fake-device-for-media-stream",
+        "--use-fake-ui-for-media-stream",
+      ],
+    },
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },

@@ -30,22 +30,30 @@ test("owner creates a server, invites, member joins, appears, then removed", asy
   // Alice creates a server.
   await alice.page.getByRole("button", { name: "Create a server" }).click();
   await alice.page.locator('input').first().fill("QA Server");
-  await alice.page.getByRole("button", { name: "Create" }).click();
+  await alice.page.getByRole("button", { name: "Create", exact: true }).click();
 
   // Grab the invite link.
   await alice.page.getByRole("button", { name: /QA Server/ }).click();
   await alice.page.getByRole("menuitem", { name: "Invite people" }).click();
-  const link = await alice.page.locator('input[readonly]').inputValue();
+  // The link is populated by an async query — wait for it to resolve.
+  const linkInput = alice.page.locator("input[readonly]");
+  await expect(linkInput).toHaveValue(/\/invite\//);
+  const link = await linkInput.inputValue();
   expect(link).toContain("/invite/");
+  // Close the invite modal so it doesn't overlay later interactions.
+  await alice.page.keyboard.press("Escape");
 
   // Bob opens the invite and joins.
   await bob.page.goto(link);
   await bob.page.getByRole("button", { name: "Accept invite" }).click();
 
   // Alice sees Bob in the member list, then removes him.
-  await expect(alice.page.getByText("Bob")).toBeVisible();
-  await alice.page
-    .getByRole("button", { name: "Remove Bob" })
-    .click({ force: true });
-  // (window.confirm auto-accepts via dialog handler in real runs.)
+  const bobRow = alice.page.getByRole("listitem").filter({ hasText: "Bob" });
+  await expect(bobRow).toBeVisible();
+  // The remove button is revealed on row hover; the action prompts
+  // window.confirm — auto-accept it.
+  alice.page.on("dialog", (dialog) => dialog.accept());
+  await bobRow.hover();
+  await bobRow.getByRole("button", { name: "Remove Bob" }).click();
+  await expect(alice.page.getByText("Bob")).toHaveCount(0);
 });
