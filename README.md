@@ -6,7 +6,7 @@ full-mesh voice/video calls — all with live presence and typing indicators,
 backed by a fully reactive database.
 
 - **Live demo:** https://discord-clone-gilt-mu.vercel.app
-- **Repository:** https://github.com/Sofyan488/discord-clone-convex
+- **Repository:** https://github.com/Sofyan488/discord-clone-v2
 
 > Built with **Spec-Driven Development** (GitHub Spec Kit) and **Claude Code**.
 > The complete specification, plan, research, data model, API contracts, and task
